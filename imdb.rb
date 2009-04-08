@@ -20,6 +20,11 @@ module IMDB
     def initialize(title, opts={})
       @limit = opts[:limit] || 0
 
+      if title =~ /^\s*$/
+        self.results = []
+        return self.results
+      end
+
       doc = Hpricot(open(IMDB::TITLES_SEARCH_URL+CGI.escape(title)))
 
       # Single match
