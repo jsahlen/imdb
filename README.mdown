@@ -5,14 +5,15 @@ Built this as a learning excercise, and because the existing libraries didn't wo
 
 This is an extremely early version, which will likely be severely refactored as it progresses.
 
-Example: Search
----------------
+Search example
+--------------
 
-    #!/usr/bin/ruby
+This is the only functionality that works right now.
 
     require 'imdb'
+    require 'pp' # just for printing
 
     results = IMDB::Search.new("howl")
-    results.each do |m|
-      pp m
+    results.each do |movie|
+      pp movie # IMDB::Movie object
     end
