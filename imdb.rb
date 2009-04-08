@@ -14,14 +14,7 @@ module IMDB
 
       # Single match
       unless (doc/"div#tn15.maindetails").empty?
-        akablock = (doc/"a[@href$='releaseinfo#akas']")[0].parent
-
-        self.results = [Movie.new(
-          :id    => (doc/"a[@href$='fullcredits]")[0].attributes["href"][/title\/(.*?)\//, 1],
-          :title => CGI.unescape((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1]),
-          :year  => (doc/"h1 a[@href^='/Sections/Years/']").inner_html,
-          :aka   => akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
-        )]
+        self.results = [Movie.new_from_doc(doc)]
 
       # Search result
       else
@@ -51,6 +44,20 @@ module IMDB
       attributes.each_pair do |key, value|
         self.instance_variable_set "@#{key}", value
       end
+    end
+
+    def self.new_from_doc(doc)
+      self.new self.parse_doc(doc)
+    end
+
+    def self.parse_doc(doc)
+      akablock = (doc/"a[@href$='releaseinfo#akas']")[0].parent
+      {
+        :id    => (doc/"a[@href$='fullcredits]")[0].attributes["href"][/title\/(.*?)\//, 1],
+        :title => CGI.unescape((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1]),
+        :year  => (doc/"h1 a[@href^='/Sections/Years/']").inner_html,
+        :aka   => akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
+      }
     end
   end
 
