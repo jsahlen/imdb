@@ -4,3 +4,15 @@ IMDb Parser
 Built this as a learning excercise, and because the existing libraries didn't work exactly as I wanted them to.
 
 This is an extremely early version, which will likely be severely refactored as it progresses.
+
+Example: Search
+---------------
+
+    #!/usr/bin/ruby
+
+    require 'imdb'
+
+    results = IMDB::Search.new("howl")
+    results.each do |m|
+      pp m
+    end
