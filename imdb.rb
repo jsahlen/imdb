@@ -5,7 +5,7 @@ module IMDB
   require 'cgi'
 
   TITLES_SEARCH_URL="http://www.imdb.com/find?s=tt&q="
-  TITLE_URL="http://www.imdb.com/titles/"
+  TITLE_URL="http://www.imdb.com/title/"
 
   class Search
     include Enumerable
