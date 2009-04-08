@@ -26,13 +26,14 @@ module IMDB
         links = (doc/"td > a[@href^='/title/']").delete_if { |a| a.inner_html =~ /^</ }
         self.results = links.collect! do |a|
           td = a.parent
+          movie = Movie.new
 
-          Movie.new(
-            :id    => a.attributes["href"][/^\/title\/([^\/]+)/, 1],
-            :title => CGI.unescapeHTML(a.inner_html),
-            :year  => td.inner_html[/<\/a>\s\((\d+)\)/, 1],
-            :aka   => td.inner_html.scan(/aka\s+<em>"([^"]+)"<\/em>/).collect { |x| CGI.unescapeHTML(x[0].strip) }
-          )
+          movie.id    = a.attributes["href"][/^\/title\/([^\/]+)/, 1]
+          movie.title = CGI.unescapeHTML(a.inner_html)
+          movie.year  = td.inner_html[/<\/a>\s\((\d+)\)/, 1]
+          movie.aka   = td.inner_html.scan(/aka\s+<em>"([^"]+)"<\/em>/).collect { |x| CGI.unescapeHTML(x[0].strip) }
+
+          movie
         end
       end
 
