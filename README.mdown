@@ -11,9 +11,11 @@ Search example
 This is the only functionality that works right now.
 
     require 'imdb'
-    require 'pp' # just for printing
 
     results = IMDB::Search.new("howl")
     results.each do |movie|
-      pp movie # IMDB::Movie object
+      puts "#{movie.title} (#{movie.year}) [#{movie.id}]"
+      unless movie.aka.empty?
+        movie.aka.each { |aka| puts "  a.k.a. #{aka}" }
+      end
     end
