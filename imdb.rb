@@ -4,13 +4,15 @@ module IMDB
   require 'hpricot'
   require 'cgi'
 
+  TITLES_SEARCH_URL="http://www.imdb.com/find?s=tt&q="
+
   class Search
     include Enumerable
 
     attr_accessor :results
 
     def initialize(title)
-      doc = Hpricot(open("http://www.imdb.com/find?s=tt&q=#{CGI.escape(title)}"))
+      doc = Hpricot(open(IMDB::TITLES_SEARCH_URL+CGI.escape(title)))
 
       # Single match
       unless (doc/"div#tn15.maindetails").empty?
