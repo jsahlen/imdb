@@ -5,14 +5,15 @@ module IMDB
   require 'cgi'
 
   class Search
+    include Enumerable
+
     attr_accessor :results
 
     def initialize(title)
       doc = Hpricot(open("http://www.imdb.com/find?s=tt&q=#{CGI.escape(title)}"))
 
-      if (doc/"div#tn15.maindetails").length > 0
-        # Single match
-
+      # Single match
+      unless (doc/"div#tn15.maindetails").empty?
         akablock = (doc/"a[@href$='releaseinfo#akas']")[0].parent
 
         self.results = [Movie.new(
@@ -21,9 +22,9 @@ module IMDB
           :year  => (doc/"h1 a[@href^='/Sections/Years/']").inner_html,
           :aka   => akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
         )]
-      else
-        # Search result
 
+      # Search result
+      else
         links = (doc/"td > a[@href^='/title/']").delete_if { |a| a.inner_html =~ /^</ }
         self.results = links.collect! do |a|
           td = a.parent
