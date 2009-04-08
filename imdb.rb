@@ -3,9 +3,14 @@ module IMDB
   require 'rubygems'
   require 'hpricot'
   require 'cgi'
+  require 'iconv'
 
   TITLES_SEARCH_URL="http://www.imdb.com/find?s=tt&q="
   TITLE_URL="http://www.imdb.com/title/"
+
+  def self.str_to_utf8(str)
+    Iconv.conv('UTF-8', 'LATIN1', str)
+  end
 
   class Search
     include Enumerable
@@ -29,9 +34,9 @@ module IMDB
           movie = Movie.new
 
           movie.id    = a.attributes["href"][/^\/title\/([^\/]+)/, 1]
-          movie.title = CGI.unescapeHTML(a.inner_html)
+          movie.title = IMDB.str_to_utf8(CGI.unescapeHTML(a.inner_html))
           movie.year  = td.inner_html[/<\/a>\s\((\d+)\)/, 1]
-          movie.aka   = td.inner_html.scan(/aka\s+<em>"([^"]+)"<\/em>/).collect { |x| CGI.unescapeHTML(x[0].strip) }
+          movie.aka   = td.inner_html.scan(/aka\s+<em>"([^"]+)"<\/em>/).collect { |x| IMDB.str_to_utf8(CGI.unescapeHTML(x[0].strip)) }
 
           movie
         end
@@ -63,9 +68,9 @@ module IMDB
       akablock = (doc/"a[@href$='releaseinfo#akas']")[0].parent
 
       self.id    = (doc/"a[@href$='fullcredits]")[0].attributes["href"][/title\/(.*?)\//, 1]
-      self.title = CGI.unescape((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1])
+      self.title = IMDB.str_to_utf8(CGI.unescapeHTML((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1]))
       self.year  = (doc/"h1 a[@href^='/Sections/Years/']").inner_html
-      self.aka   = akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
+      self.aka   = akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| IMDB.str_to_utf8(CGI.unescapeHTML(x[0].strip)) }
 
       self
     end
