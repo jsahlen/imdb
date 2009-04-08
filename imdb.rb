@@ -5,6 +5,7 @@ module IMDB
   require 'cgi'
 
   TITLES_SEARCH_URL="http://www.imdb.com/find?s=tt&q="
+  TITLE_URL="http://www.imdb.com/titles/"
 
   class Search
     include Enumerable
@@ -44,7 +45,7 @@ module IMDB
   end
 
   class Movie
-    attr_accessor :id, :title, :year, :aka
+    attr_accessor :id, :title, :year, :aka, :url
 
     def initialize(attributes={})
       attributes.each_pair do |key, value|
@@ -53,17 +54,24 @@ module IMDB
     end
 
     def self.new_from_doc(doc)
-      self.new self.parse_doc(doc)
+      movie = self.new
+      movie.parse_doc(doc)
     end
 
-    def self.parse_doc(doc)
+    def parse_doc(doc)
       akablock = (doc/"a[@href$='releaseinfo#akas']")[0].parent
-      {
-        :id    => (doc/"a[@href$='fullcredits]")[0].attributes["href"][/title\/(.*?)\//, 1],
-        :title => CGI.unescape((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1]),
-        :year  => (doc/"h1 a[@href^='/Sections/Years/']").inner_html,
-        :aka   => akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
-      }
+
+      self.id    = (doc/"a[@href$='fullcredits]")[0].attributes["href"][/title\/(.*?)\//, 1]
+      self.title = CGI.unescape((doc/"h1").inner_html[/^(.*?)(?: <span)/, 1])
+      self.year  = (doc/"h1 a[@href^='/Sections/Years/']").inner_html
+      self.aka   = akablock.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| CGI.unescapeHTML(x[0].strip) }
+
+      self
+    end
+
+    def id=(id)
+      @id = id
+      self.url = IMDB::TITLE_URL + id
     end
   end
 
