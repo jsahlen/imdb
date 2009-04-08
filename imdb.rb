@@ -11,7 +11,9 @@ module IMDB
 
     attr_accessor :results
 
-    def initialize(title)
+    def initialize(title, opts={})
+      @limit = opts[:limit] || 0
+
       doc = Hpricot(open(IMDB::TITLES_SEARCH_URL+CGI.escape(title)))
 
       # Single match
@@ -32,6 +34,8 @@ module IMDB
           )
         end
       end
+
+      self.results = self.results.slice(0, @limit) if @limit != 0
     end
 
     def each
