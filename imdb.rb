@@ -56,7 +56,7 @@ module IMDB
   end
 
   class Movie
-    attr_accessor :id, :title, :year, :alternate_titles
+    attr_accessor :id, :title, :year, :aka
 
     def initialize(attributes={})
       attributes.each_pair do |key, value|
