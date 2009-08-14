@@ -1,7 +1,7 @@
 module IMDB
 
   class Movie
-    attr_accessor :id, :title, :year, :aka, :url, :extra
+    attr_accessor :id, :title, :year, :aka, :url, :director, :extra
 
     def initialize(attributes={})
       self.extra = {}
@@ -38,26 +38,27 @@ module IMDB
       self.year  = (doc/"h1 a[@href^='/Sections/Years/']").inner_html
       self.aka   = akalink ? akalink.parent.inner_html.scan(/(?:>)([^<]*?)\(/).collect { |x| IMDB.str_to_utf8(CGI.unescapeHTML(x[0].strip)) } : []
 
-      parse_extra(doc)
+      parse_full_details(doc)
 
       self
     end
 
-    def parse_extra(doc)
-      director_link  = (doc/"#director-info/a")[0]
+    def parse_full_details(doc)
+      director_links = (doc/"#director-info/a")
       writer_links   = (doc/"a[@onclick*='writerlist']")
       tagline_header = (doc/"h5[text()='Tagline:']")[0]
       plot_link      = (doc/"a[@href$='/plotsummary]")[0]
       mpaa_link      = (doc/"a[@href='/mpaa']")[0]
 
-      self.extra = {
-        "director"    => director_link ? IMDB.str_to_utf8(CGI.unescapeHTML(director_link.inner_html)) : "",
-        "writers"     => writer_links ? writer_links.collect { |w| IMDB.str_to_utf8(CGI.unescapeHTML(w.inner_html)) } : [],
-        "tagline"     => tagline_header ? IMDB.str_to_utf8(CGI.unescapeHTML(tagline_header.parent.inner_html[/\/h5>(.+?)(<|$)/m, 1].strip)) : "",
-        "plot"        => plot_link ? IMDB.str_to_utf8(CGI.unescapeHTML(plot_link.parent.inner_html[/\/h5>(.+?)<a/m, 1].strip)) : "",
-        "cast"        => ((doc/"table.cast")[0]/"tr").collect { |tr| { "actor" => IMDB.str_to_utf8(CGI.unescapeHTML((tr/"td.nm")[0].inner_text)), "character" => IMDB.str_to_utf8(CGI.unescapeHTML((tr/"td.char")[0].inner_text)) } },
-        "mpaa_rating" => mpaa_link ? IMDB.str_to_utf8(CGI.unescapeHTML(mpaa_link.parent.parent.inner_html[/\/h5>(.+)$/m, 1].strip)) : ""
-      }
+      if director_links.length > 0
+        self.director = director_links.collect { |l| IMDB.str_to_utf8(CGI.unescapeHTML(l.inner_html)) }
+      end
+
+      self.extra["writers"]     = writer_links.collect { |w| IMDB.str_to_utf8(CGI.unescapeHTML(w.inner_html)) } if writer_links
+      self.extra["tagline"]     = IMDB.str_to_utf8(CGI.unescapeHTML(tagline_header.parent.inner_html[/\/h5>(.+?)(<|$)/m, 1].strip)) if tagline_header
+      self.extra["plot"]        = IMDB.str_to_utf8(CGI.unescapeHTML(plot_link.parent.inner_html[/\/h5>(.+?)<a/m, 1].strip)) if plot_link
+      self.extra["mpaa_rating"] = IMDB.str_to_utf8(CGI.unescapeHTML(mpaa_link.parent.parent.inner_html[/\/h5>(.+)$/m, 1].strip)) if mpaa_link
+      self.extra["cast"]        = ((doc/"table.cast")[0]/"tr").collect { |tr| { "actor" => IMDB.str_to_utf8(CGI.unescapeHTML((tr/"td.nm")[0].inner_text)), "character" => IMDB.str_to_utf8(CGI.unescapeHTML((tr/"td.char")[0].inner_text)) } }
 
       self
     end
@@ -69,11 +70,12 @@ module IMDB
 
     def to_json(*a)
       {
-        "id"    => self.id,
-        "title" => self.title,
-        "year"  => self.year,
-        "aka"   => self.aka,
-        "extra" => self.extra
+        "id"       => self.id,
+        "title"    => self.title,
+        "year"     => self.year,
+        "aka"      => self.aka,
+        "director" => self.director,
+        "extra"    => self.extra
       }.to_json(*a)
     end
   end
